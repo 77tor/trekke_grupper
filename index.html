@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gruppe-generator</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      max-width: 1000px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    /* Navigasjon / Faner */
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0.5rem;
+    }
+    .tab-btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      background: #e2e8f0;
+      color: var(--text);
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    /* Layout og Generelt */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card);
+      padding: 1.25rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    label { font-weight: bold; display: block; margin-bottom: 0.5rem; }
+    textarea, input, select, button {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    textarea { resize: vertical; height: 160px; }
+    .file-upload {
+      margin-top: 0.5rem;
+      padding: 0.4rem;
+      background: #f1f5f9;
+      border-radius: 6px;
+    }
+    .rule-input { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .rule-item { 
+      display: flex; justify-content: space-between; align-items: center; 
+      background: #f1f5f9; padding: 0.4rem 0.8rem; border-radius: 4px; margin-top: 0.4rem; font-size: 13px;
+    }
+    .rule-item button { width: auto; background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; }
+    
+    .btn-main {
+      background: var(--primary);
+      color: white;
+      font-weight: bold;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .btn-main:hover { opacity: 0.9; }
+
+    /* Controls på elevvisning */
+    .draw-controls {
+      background: var(--card);
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      max-width: 650px;
+      margin: 0 auto 2rem auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .controls-row {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+    .controls-row > div { flex: 1; }
+
+    /* Resultat-kort (Grupper) */
+    .groups-container { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+      gap: 1.25rem; 
+      margin-top: 1.5rem; 
+    }
+    .group-card { 
+      background: var(--card); 
+      border-top: 5px solid var(--primary); 
+      padding: 1.2rem; 
+      border-radius: 8px; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08); 
+    }
+    .group-card h3 { 
+      margin-top: 0; 
+      font-size: 18px; 
+      color: var(--primary);
+      border-bottom: 2px solid #f1f5f9; 
+      padding-bottom: 0.5rem; 
+    }
+    .group-card ul { list-style-type: none; padding-left: 0; margin: 0; }
+    .group-card li { 
+      padding: 0.4rem 0; 
+      border-bottom: 1px dashed #e2e8f0; 
+      font-size: 16px;
+    }
+    .group-card li:last-child { border-bottom: none; }
+
+    .student-header { text-align: center; margin-bottom: 1.5rem; }
+    .student-header h1 { font-size: 2.2rem; margin-bottom: 0.2rem; color: var(--primary); }
+    .empty-msg { text-align: center; color: #64748b; font-style: italic; margin-top: 2rem; grid-column: 1 / -1; }
+    .status-badge {
+      text-align: center;
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fane-navigasjon i toppen -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('admin')">⚙️ Lærervisning (Oppsett)</button>
+    <button class="tab-btn" onclick="switchTab('student')">📺 Elevvisning (Trekning)</button>
+  </div>
+
+  <!-- 1. LÆRERVISNING / ADMIN -->
+  <div id="adminView" class="view-section active">
+    <h1>Oppsett og Forbehold</h1>
+    <p style="color: #64748b; margin-top: -0.5rem; margin-bottom: 1.5rem;">Legg inn elever og regler her. Elevene ser ikke denne siden.</p>
+
+    <div class="grid">
+      <!-- Elevinndata -->
+      <div class="card">
+        <label for="students">Elever (én per linje):</label>
+        <textarea id="students" placeholder="Kari&#10;Ola&#10;Per&#10;Anne&#10;Jonas" oninput="updateStudentCount()"></textarea>
+
+        <div class="file-upload">
+          <label for="fileInput" style="font-size: 12px; margin-bottom: 0.2rem;">Last opp liste (.txt/.csv):</label>
+          <input type="file" id="fileInput" accept=".txt,.csv" onchange="handleFileUpload(event)">
+        </div>
+        
+        <div class="status-badge" id="studentCountBadge">0 elever registrert</div>
+      </div>
+
+      <!-- Regler og forbehold -->
+      <div class="card">
+        <label>Legg til forbehold (skjult for elever):</label>
+        <div class="rule-input">
+          <input type="text" id="person1" placeholder="Elev 1">
+          <select id="ruleType">
+            <option value="MUST">MÅ være med</option>
+            <option value="MUST_NOT">SKAL IKKE være med</option>
+          </select>
+          <input type="text" id="person2" placeholder="Elev 2">
+        </div>
+        <button onclick="addRule()" style="background: #e2e8f0; border: none; cursor: pointer;">Legg til regel</button>
+
+        <div id="rulesList" style="margin-top: 1rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ELEVVISNING / STORSKJERM -->
+  <div id="studentView" class="view-section">
+    <div class="student-header">
+      <h1>Tilfeldig Gruppetrekning</h1>
+    </div>
+
+    <!-- Valg og trekk-knapp på elevsiden -->
+    <div class="draw-controls">
+      <div class="controls-row">
+        <div>
+          <label for="modeSelect">Inndelingstype:</label>
+          <select id="modeSelect" onchange="toggleMode()">
+            <option value="perGroup">Antall elever per gruppe</option>
+            <option value="totalGroups">Totalt antall grupper</option>
+          </select>
+        </div>
+        <div>
+          <label id="numberLabel" for="numberInput">Antall elever per gruppe:</label>
+          <input type="number" id="numberInput" value="3" min="1">
+        </div>
+      </div>
+
+      <!-- Valg av Gruppenavn -->
+      <div class="controls-row">
+        <div>
+          <label for="namingSelect">Gruppenavn-tema:</label>
+          <select id="namingSelect" onchange="toggleCustomNaming()">
+            <option value="numbers">Tall (Gruppe 1, Gruppe 2...)</option>
+            <option value="letters">Bokstaver (Gruppe A, Gruppe B...)</option>
+            <option value="colors">Farger (Rød, Blå, Grønn...)</option>
+            <option value="animals">Dyr (Løvene, Tigerne, Elefantene...)</option>
+            <option value="shapes">Figurer (Sirkel, Firkant, Trekant...)</option>
+            <option value="custom">Egne gruppenavn...</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="customNamingContainer" style="display: none;">
+        <label for="customNamesInput">Skriv inn egne navn (separert med komma):</label>
+        <input type="text" id="customNamesInput" placeholder="Alpha, Beta, Gamma, Delta">
+      </div>
+
+      <button class="btn-main" onclick="generateGroups()">🎲 Trekk Grupper</button>
+    </div>
+
+    <div id="studentResults" class="groups-container">
+      <p class="empty-msg">Velg innstillinger over og trykk på «Trekk Grupper» for å starte!</p>
+    </div>
+  </div>
+
+  <script>
+    const rules = [];
+
+// Tema-lister for navngiving med emojier
+const namePresets = {
+  colors: [
+  "🟥 Rød gruppe", "🟦 Blå gruppe", "🟩 Grønn gruppe", "🟨 Gul gruppe", 
+  "🟪 Lilla gruppe", "🟧 Oransje gruppe", "⬜️ Hvit gruppe", "⬛️ Svart gruppe", 
+  "🟫 Brun gruppe"
+  ],
+  animals: [
+    "🦁 Løvene", "🐯 Tigerne", "🐘 Elefantene", "🐬 Delfinene", 
+    "🦅 Ørnene", "🐼 Pandaene", "🐺 Ulvene", "🐻 Bjørnene", 
+    "🦊 Gaupene", "🦅 Falkene"
+  ],
+  shapes: [
+    "⭕️ Sirkel", "⬛ kvadrat", "📐 Trekant", "⭐️ Stjerne", 
+    "🔷 Rombe", "🩶 Hjerte", "🛑 Åttekant", "🧊 Kube", 
+    "🔺 Pyramide", "⬟ Pentagon"
+  ]
+};
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+
+      if (tab === 'admin') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('adminView').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('studentView').classList.add('active');
+      }
+    }
+
+    function toggleMode() {
+      const mode = document.getElementById('modeSelect').value;
+      const label = document.getElementById('numberLabel');
+      label.innerText = (mode === 'perGroup') ? 'Antall elever per gruppe:' : 'Totalt antall grupper:';
+    }
+
+    function toggleCustomNaming() {
+      const type = document.getElementById('namingSelect').value;
+      const container = document.getElementById('customNamingContainer');
+      container.style.display = (type === 'custom') ? 'block' : 'none';
+    }
+
+    function updateStudentCount() {
+      const rawInput = document.getElementById('students').value;
+      const count = rawInput.split('\n').map(s => s.trim()).filter(s => s.length > 0).length;
+      document.getElementById('studentCountBadge').innerText = `${count} elever registrert`;
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const names = text.split(/[\r\n,]+/)
+                          .map(name => name.trim())
+                          .filter(name => name.length > 0);
+        document.getElementById('students').value = names.join('\n');
+        updateStudentCount();
+      };
+      reader.readAsText(file);
+    }
+
+    function addRule() {
+      const p1 = document.getElementById('person1').value.trim();
+      const p2 = document.getElementById('person2').value.trim();
+      const type = document.getElementById('ruleType').value;
+
+      if (!p1 || !p2 || p1.toLowerCase() === p2.toLowerCase()) {
+        alert("Vennligst oppgi to ulike elevnavn.");
+        return;
+      }
+
+      rules.push({ p1, p2, type });
+      document.getElementById('person1').value = '';
+      document.getElementById('person2').value = '';
+      renderRules();
+    }
+
+    function removeRule(index) {
+      rules.splice(index, 1);
+      renderRules();
+    }
+
+    function renderRules() {
+      const list = document.getElementById('rulesList');
+      list.innerHTML = '';
+      rules.forEach((r, i) => {
+        const text = r.type === 'MUST' 
+          ? `<b>${r.p1}</b> og <b>${r.p2}</b> MÅ være sammen` 
+          : `<b>${r.p1}</b> og <b>${r.p2}</b> får IKKE være sammen`;
+        list.innerHTML += `<div class="rule-item"><span>${text}</span><button onclick="removeRule(${i})">✕</button></div>`;
+      });
+    }
+
+    // Genererer navn til gruppene basert på valg
+function getGroupName(index, totalGroups) {
+  const namingType = document.getElementById('namingSelect').value;
+
+  if (namingType === 'numbers') {
+    return `🔢 Gruppe ${index + 1}`;
+  } else if (namingType === 'letters') {
+    let letter = "";
+    let n = index;
+    while (n >= 0) {
+      letter = String.fromCharCode((n % 26) + 65) + letter;
+      n = Math.floor(n / 26) - 1;
+    }
+    return `🔤 Gruppe ${letter}`;
+  } else if (namingType === 'custom') {
+    const rawCustom = document.getElementById('customNamesInput').value;
+    const customNames = rawCustom.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    if (customNames[index]) {
+      return `✨ ${customNames[index]}`;
+    }
+    return `✨ Gruppe ${index + 1}`;
+  } else if (namePresets[namingType]) {
+    const preset = namePresets[namingType];
+    if (preset[index]) {
+      return preset[index];
+    }
+    return `${preset[index % preset.length]} ${Math.floor(index / preset.length) + 1}`;
+  }
+
+  return `Gruppe ${index + 1}`;
+}
+
+    function generateGroups() {
+      const rawInput = document.getElementById('students').value;
+      let students = rawInput.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+      const mode = document.getElementById('modeSelect').value;
+      const numVal = parseInt(document.getElementById('numberInput').value, 10);
+
+      if (students.length === 0) {
+        alert("Ingen elever registrert! Gå til Lærervisning for å legge inn elever først.");
+        return;
+      }
+
+      if (isNaN(numVal) || numVal < 1) {
+        alert("Vennligst oppgi et gyldig tall.");
+        return;
+      }
+
+      let numGroups = (mode === 'perGroup') 
+        ? Math.ceil(students.length / numVal) 
+        : Math.min(numVal, students.length);
+
+      let bestResult = null;
+      let minViolations = Infinity;
+
+      // Algoritme for å sjekke forbeholdene
+      for (let attempt = 0; attempt < 2500; attempt++) {
+        const shuffled = [...students].sort(() => Math.random() - 0.5);
+        const groups = Array.from({ length: numGroups }, () => []);
+
+        shuffled.forEach((student, index) => {
+          groups[index % numGroups].push(student);
+        });
+
+        const violations = countViolations(groups);
+        if (violations < minViolations) {
+          minViolations = violations;
+          bestResult = groups;
+        }
+
+        if (violations === 0) break;
+      }
+
+      if (minViolations > 0) {
+        alert(`Merk: Kunne ikke oppfylle alle forbehold 100%. Viser beste forsøk.`);
+      }
+
+      renderGroupsToContainer('studentResults', bestResult);
+    }
+
+    function countViolations(groups) {
+      let violations = 0;
+      rules.forEach(rule => {
+        const p1 = rule.p1.toLowerCase();
+        const p2 = rule.p2.toLowerCase();
+
+        const p1Group = groups.findIndex(g => g.some(s => s.toLowerCase() === p1));
+        const p2Group = groups.findIndex(g => g.some(s => s.toLowerCase() === p2));
+
+        if (p1Group !== -1 && p2Group !== -1) {
+          if (rule.type === 'MUST' && p1Group !== p2Group) violations++;
+          if (rule.type === 'MUST_NOT' && p1Group === p2Group) violations++;
+        }
+      });
+      return violations;
+    }
+
+    function renderGroupsToContainer(containerId, groups) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      groups.forEach((group, index) => {
+        const title = getGroupName(index, groups.length);
+        const card = document.createElement('div');
+        card.className = 'group-card';
+        card.innerHTML = `
+          <h3>${title}</h3>
+          <ul>${group.map(student => `<li>${student}</li>`).join('')}</ul>
+        `;
+        container.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
