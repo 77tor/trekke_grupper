@@ -167,15 +167,56 @@
         </div>
 
         <!-- Mappe-velger (vises kun ved riktig PIN) -->
-        <div id="fileSelectBox" class="file-select-box">
-          <label for="jsFileSelect">Velg lagret liste (.js):</label>
-          <select id="jsFileSelect" onchange="loadSelectedJsFile()">
-            <option value="">-- Velg liste --</option>
-            <option value="Ansatte-Heståsen.js">Ansatte Heståsen</option>
-            <!-- Du kan legge til flere her etter hvert, f.eks: -->
-            <!-- <option value="Klasse-8A.js">Klasse 8A</option> -->
-          </select>
-        </div>
+<div id="fileSelectBox" class="file-select-box">
+  <label for="jsFileSelect">Velg lagret liste (.js):</label>
+  <select id="jsFileSelect" onchange="loadSelectedJsFile()">
+    <option value="">-- Velg liste --</option>
+    <option value="Ansatte-Heståsen.js">Ansatte Heståsen</option>
+    
+    <!-- Klasser fra Klasser.js -->
+    <optgroup label="1. trinn">
+      <option value="Klasser.js">Klasse 1A</option>
+      <option value="Klasser.js">Klasse 1B</option>
+    </optgroup>
+    
+    <optgroup label="2. trinn">
+      <option value="Klasser.js">Klasse 2A</option>
+      <option value="Klasser.js">Klasse 2B</option>
+      <option value="Klasser.js">Klasse 2C</option>
+    </optgroup>
+    
+    <optgroup label="3. trinn">
+      <option value="Klasser.js">Klasse 3A</option>
+      <option value="Klasser.js">Klasse 3B</option>
+      <option value="Klasser.js">Klasse 3C</option>
+    </optgroup>
+
+    <optgroup label="4. trinn">
+      <option value="Klasser.js">Klasse 4A</option>
+      <option value="Klasser.js">Klasse 4B</option>
+      <option value="Klasser.js">Klasse 4C</option>
+    </optgroup>
+
+    <optgroup label="5. trinn">
+      <option value="Klasser.js">Klasse 5A</option>
+      <option value="Klasser.js">Klasse 5B</option>
+      <option value="Klasser.js">Klasse 5C</option>
+    </optgroup>
+
+    <optgroup label="6. trinn">
+      <option value="Klasser.js">Klasse 6A</option>
+      <option value="Klasser.js">Klasse 6B</option>
+      <option value="Klasser.js">Klasse 6C</option>
+      <option value="Klasser.js">Klasse 6D</option>
+    </optgroup>
+
+    <optgroup label="7. trinn">
+      <option value="Klasser.js">Klasse 7A</option>
+      <option value="Klasser.js">Klasse 7B</option>
+      <option value="Klasser.js">Klasse 7C</option>
+    </optgroup>
+  </select>
+</div>
 
         <label for="students" style="margin-top: 1rem;">Personer / Elever (én per linje):</label>
         <textarea id="students" placeholder="Kari&#10;Ola&#10;Per" oninput="updateStudentCount()"></textarea>
